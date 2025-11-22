@@ -3,74 +3,120 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>LocalStorage Demo</title>
+  <title>Budget Journalier</title>
   <style>
     body {
       font-family: Arial, sans-serif;
       background: #f5f5f5;
       padding: 40px;
       display: flex;
-      flex-direction: column;
-      align-items: center;
+      justify-content: center;
     }
     .container {
       background: #fff;
       padding: 20px;
       border-radius: 12px;
       box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-      width: 320px;
-      text-align: center;
+      width: 350px;
     }
-    input {
+    input, button {
       width: 100%;
       padding: 10px;
       margin: 10px 0;
-      border: 1px solid #ccc;
       border-radius: 8px;
+      border: 1px solid #ccc;
     }
     button {
-      padding: 10px 20px;
-      border: none;
       background: #007bff;
       color: #fff;
-      border-radius: 8px;
+      border: none;
       cursor: pointer;
-      width: 100%;
     }
-    button:hover {
-      background: #0056b3;
+    button:hover { background: #0056b3; }
+    .expense-item {
+      background: #eee;
+      padding: 8px;
+      border-radius: 8px;
+      margin: 6px 0;
     }
-    .output {
-      margin-top: 20px;
-      font-size: 1.2em;
-      color: #333;
-    }
+    h2, h3 { text-align: center; }
   </style>
 </head>
 <body>
   <div class="container">
-    <h2>Sauvegarde LocalStorage</h2>
+    <h2>Budget Journalier</h2>
 
-    <input type="text" id="inputData" placeholder="Entrez une donnée..." />
-    <button onclick="saveData()">Sauvegarder</button>
+    <!-- Fixer le budget -->
+    <input type="number" id="budget" placeholder="Budget journalier (€)" />
+    <button onclick="saveBudget()">Enregistrer le budget</button>
 
-    <div class="output" id="display"></div>
+    <h3>Dépenses du jour</h3>
+
+    <!-- Ajouter une dépense -->
+    <input type="text" id="depenseNom" placeholder="Nom de la dépense" />
+    <input type="number" id="depenseMontant" placeholder="Montant (€)" />
+    <button onclick="addExpense()">Ajouter dépense</button>
+
+    <!-- Affichage -->
+    <div id="resume"></div>
+    <div id="listeDepenses"></div>
   </div>
 
   <script>
-    function saveData() {
-      const value = document.getElementById('inputData').value;
-      localStorage.setItem('maDonnee', value);
-      displayData();
+    const today = new Date().toISOString().split('T')[0]; // yyyy-mm-dd
+
+    function saveBudget() {
+      const budget = document.getElementById('budget').value;
+      localStorage.setItem('budgetJournalier', budget);
+      updateDisplay();
     }
 
-    function displayData() {
-      const saved = localStorage.getItem('maDonnee');
-      document.getElementById('display').innerText = saved ? `Donnée sauvegardée : ${saved}` : "Aucune donnée enregistrée.";
+    function addExpense() {
+      const nom = document.getElementById('depenseNom').value;
+      const montant = parseFloat(document.getElementById('depenseMontant').value);
+
+      if (!nom || !montant) return alert("Veuillez remplir tous les champs.");
+
+      const expenses = JSON.parse(localStorage.getItem('depenses')) || [];
+
+      expenses.push({
+        nom,
+        montant,
+        date: today,
+        time: new Date().toLocaleTimeString()
+      });
+
+      localStorage.setItem('depenses', JSON.stringify(expenses));
+      document.getElementById('depenseNom').value = "";
+      document.getElementById('depenseMontant').value = "";
+      updateDisplay();
     }
 
-    // Affiche automatiquement la donnée au chargement
-    displayData();
+    function updateDisplay() {
+      const budget = parseFloat(localStorage.getItem('budgetJournalier')) || 0;
+      const expenses = JSON.parse(localStorage.getItem('depenses')) || [];
+
+      const todayExpenses = expenses.filter(e => e.date === today);
+      const total = todayExpenses.reduce((acc, e) => acc + e.montant, 0);
+
+      document.getElementById('resume').innerHTML = `
+        <p><strong>Budget du jour :</strong> ${budget} €</p>
+        <p><strong>Total dépenses :</strong> ${total} €</p>
+        <p><strong>Reste :</strong> ${budget - total} €</p>
+      `;
+
+      const listDiv = document.getElementById('listeDepenses');
+      listDiv.innerHTML = "";
+
+      todayExpenses.forEach(e => {
+        const div = document.createElement('div');
+        div.className = 'expense-item';
+        div.textContent = `${e.time} - ${e.nom} : ${e.montant} €`;
+        listDiv.appendChild(div);
+      });
+    }
+
+    updateDisplay();
   </script>
 </body>
 </html>
