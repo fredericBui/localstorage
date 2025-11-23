@@ -38,6 +38,21 @@
       padding: 8px;
       border-radius: 8px;
       margin: 6px 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .suppr-btn {
+      background: #dc3545;
+      color: #fff;
+      padding: 6px 10px;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      width: auto;
+    }
+    .suppr-btn:hover {
+      background: #b52a37;
     }
     h2, h3 { text-align: center; }
   </style>
@@ -83,7 +98,7 @@
         nom,
         montant,
         date: today,
-        time: new Date()
+        time: new Date().toLocaleTimeString()
       });
 
       localStorage.setItem('depenses', JSON.stringify(expenses));
@@ -92,11 +107,23 @@
       updateDisplay();
     }
 
+    function deleteExpense(index) {
+      const expenses = JSON.parse(localStorage.getItem('depenses')) || [];
+
+      expenses.splice(index, 1);
+      localStorage.setItem('depenses', JSON.stringify(expenses));
+
+      updateDisplay();
+    }
+
     function updateDisplay() {
       const budget = parseFloat(localStorage.getItem('budgetJournalier')) || 0;
       const expenses = JSON.parse(localStorage.getItem('depenses')) || [];
 
-      const todayExpenses = expenses.filter(e => e.date === today);
+      const todayExpenses = expenses
+        .map((e, i) => ({...e, index: i}))
+        .filter(e => e.date === today);
+
       const total = todayExpenses.reduce((acc, e) => acc + e.montant, 0);
 
       document.getElementById('resume').innerHTML = `
@@ -111,7 +138,12 @@
       todayExpenses.forEach(e => {
         const div = document.createElement('div');
         div.className = 'expense-item';
-        div.textContent = `${e.time} - ${e.nom} : ${e.montant} €`;
+
+        div.innerHTML = `
+          <span>${e.time} - ${e.nom} : ${e.montant} €</span>
+          <button class="suppr-btn" onclick="deleteExpense(${e.index})">Supprimer</button>
+        `;
+
         listDiv.appendChild(div);
       });
     }
