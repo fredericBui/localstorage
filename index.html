@@ -4,161 +4,81 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Budget Journalier</title>
-
   <style>
-    :root {
-      --primary: #3b82f6;
-      --primary-dark: #1d4ed8;
-      --danger: #ef4444;
-      --danger-dark: #b91c1c;
-      --bg: #f0f2f5;
-      --card-bg: #ffffff;
-    }
-
     body {
-      font-family: "Inter", Arial, sans-serif;
-      background: var(--bg);
-      margin: 0;
-      padding: 20px;
+      font-family: Arial, sans-serif;
+      background: #f5f5f5;
+      padding: 40px;
       display: flex;
       justify-content: center;
     }
-
     .container {
-      width: 100%;
-      max-width: 420px;
-    }
-
-    h2, h3 {
-      text-align: center;
-      margin-bottom: 15px;
-      color: #111;
-    }
-
-    /* Cartes */
-    .card {
-      background: var(--card-bg);
-      padding: 18px;
-      margin-bottom: 18px;
-      border-radius: 14px;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.08);
-    }
-
-    input {
-      width: 100%;
-      padding: 14px;
-      margin: 8px 0;
-      border-radius: 10px;
-      border: 1px solid #d1d5db;
-      background: #f9fafb;
-      font-size: 16px;
-    }
-
-    button {
-      width: 100%;
-      padding: 14px;
-      margin-top: 12px;
+      background: #fff;
+      padding: 20px;
       border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      width: 350px;
+    }
+    input, button {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+    }
+    button {
+      background: #007bff;
+      color: #fff;
       border: none;
-      font-size: 16px;
-      font-weight: bold;
-      color: white;
-      background: var(--primary);
       cursor: pointer;
-      transition: 0.2s;
     }
-
-    button:hover {
-      background: var(--primary-dark);
-    }
-
-    /* Dépenses */
+    button:hover { background: #0056b3; }
     .expense-item {
+      background: #eee;
+      padding: 8px;
+      border-radius: 8px;
+      margin: 6px 0;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 12px;
-      margin: 8px 0;
-      border-radius: 12px;
-      background: #f3f4f6;
     }
-
-    .expense-left {
-      display: flex;
-      flex-direction: column;
-    }
-
-    .expense-title {
-      font-weight: 600;
-      font-size: 16px;
-    }
-
-    .expense-time {
-      font-size: 13px;
-      color: #777;
-    }
-
-    .expense-amount {
-      font-weight: bold;
-      margin-top: 5px;
-    }
-
     .suppr-btn {
-      background: var(--danger);
+      background: #dc3545;
+      color: #fff;
+      padding: 6px 10px;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
       width: auto;
-      padding: 8px 12px;
-      font-size: 13px;
-      border-radius: 10px;
     }
-
     .suppr-btn:hover {
-      background: var(--danger-dark);
+      background: #b52a37;
     }
-
-    /* Résumé */
-    .resume-line {
-      font-size: 17px;
-      margin: 6px 0;
-    }
-
-    .resume-line strong {
-      color: #111;
-    }
-
+    h2, h3 { text-align: center; }
   </style>
 </head>
-
 <body>
-
   <div class="container">
-
     <h2>Budget Journalier</h2>
 
-    <!-- Carte budget -->
-    <div class="card">
-      <input type="number" id="budget" placeholder="Budget du jour (€)" />
-      <button onclick="saveBudget()">Enregistrer le budget</button>
-    </div>
+    <!-- Fixer le budget -->
+    <input type="number" id="budget" placeholder="Budget journalier (€)" />
+    <button onclick="saveBudget()">Enregistrer le budget</button>
 
     <h3>Dépenses du jour</h3>
 
-    <!-- Carte ajout dépense -->
-    <div class="card">
-      <input type="text" id="depenseNom" placeholder="Nom de la dépense" />
-      <input type="number" id="depenseMontant" placeholder="Montant (€)" />
-      <button onclick="addExpense()">Ajouter une dépense</button>
-    </div>
+    <!-- Ajouter une dépense -->
+    <input type="text" id="depenseNom" placeholder="Nom de la dépense" />
+    <input type="number" id="depenseMontant" placeholder="Montant (€)" />
+    <button onclick="addExpense()">Ajouter dépense</button>
 
-    <!-- Résumé -->
-    <div class="card" id="resume"></div>
-
-    <!-- Liste des dépenses -->
-    <div class="card" id="listeDepenses"></div>
-
+    <!-- Affichage -->
+    <div id="resume"></div>
+    <div id="listeDepenses"></div>
   </div>
 
   <script>
-    const today = new Date().toISOString().split('T')[0];
+    const today = new Date().toISOString().split('T')[0]; // yyyy-mm-dd
 
     function saveBudget() {
       const budget = document.getElementById('budget').value;
@@ -189,8 +109,10 @@
 
     function deleteExpense(index) {
       const expenses = JSON.parse(localStorage.getItem('depenses')) || [];
+
       expenses.splice(index, 1);
       localStorage.setItem('depenses', JSON.stringify(expenses));
+
       updateDisplay();
     }
 
@@ -205,9 +127,9 @@
       const total = todayExpenses.reduce((acc, e) => acc + e.montant, 0);
 
       document.getElementById('resume').innerHTML = `
-        <p class="resume-line"><strong>Budget :</strong> ${budget} €</p>
-        <p class="resume-line"><strong>Total dépenses :</strong> ${total} €</p>
-        <p class="resume-line"><strong>Reste :</strong> ${budget - total} €</p>
+        <p><strong>Budget du jour :</strong> ${budget} €</p>
+        <p><strong>Total dépenses :</strong> ${total} €</p>
+        <p><strong>Reste :</strong> ${budget - total} €</p>
       `;
 
       const listDiv = document.getElementById('listeDepenses');
@@ -218,11 +140,7 @@
         div.className = 'expense-item';
 
         div.innerHTML = `
-          <div class="expense-left">
-            <span class="expense-title">${e.nom}</span>
-            <span class="expense-time">${e.time}</span>
-            <span class="expense-amount">${e.montant} €</span>
-          </div>
+          <span>${e.time} - ${e.nom} : ${e.montant} €</span>
           <button class="suppr-btn" onclick="deleteExpense(${e.index})">Supprimer</button>
         `;
 
@@ -232,6 +150,5 @@
 
     updateDisplay();
   </script>
-
 </body>
 </html>
